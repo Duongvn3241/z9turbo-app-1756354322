@@ -1,0 +1,24 @@
+hans_button.achievements=Achievements
+hans_button.skin=Dressing Room
+hans_button.settings=Settings
+hans_button.realms=Realm
+hans_button.store=Marketplace
+
+hans_settings_button.changelog=Changelog
+hans_settings_button.about=About NekoUI
+hans_settings_button.quick_settings=Quick Settings
+hans_settings_button.graphics_and_video=Graphics And Video
+hans_settings_button.gameplay=Gameplay
+hans_world_settings.hans_world_settings=World Settings
+hans_world_settings.hans_cheat_settings=Cheats
+
+hans_settings.perspective_camera=Camera Perspective
+hans_settings.graphics_mode=Graphics Mode
+hans_settings.ui=Ui Profile
+
+hans_word_section.gamemode_type=Gamemode
+hans_word_section.personal_gamemode=Personal Gamemode
+hans_word_section.difficulty=Difficulty
+
+entity.wither.name=§2§3§rWither
+entity.ender_dragon.name=§2§1§rEnder Dragon

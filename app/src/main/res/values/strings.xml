@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Z9 Turbo</string>
+    <string name="accessibility_service_name">Z9 Turbo Boost Service</string>
+    <string name="accessibility_service_desc">Tự động bấm "Buộc dừng" trong trang Thông tin ứng dụng để đóng các app ngốn tài nguyên mà bạn chọn.</string>
+</resources>
