@@ -25,35 +25,26 @@ jobs:
           fi
           ./gradlew --version
 
-      - name: Build Debug APK (verbose + managed SDK)
+      - name: Build Debug APK (tee logs)
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
         run: |
           set -e
-          echo "=== Clean ==="
-          ./gradlew clean --no-daemon --stacktrace --info
-          echo "=== Dependencies (debug) ==="
-          ./gradlew :app:dependencies --configuration debugCompileClasspath --no-daemon --stacktrace --info
-          echo "=== Compile Kotlin (debug) ==="
-          ./gradlew :app:compileDebugKotlin --no-daemon --stacktrace --info
-          echo "=== Assemble Debug APK ==="
-          ./gradlew assembleDebug --no-daemon --stacktrace --info
+          mkdir -p build_logs
+          ./gradlew clean                    --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
+          ./gradlew :app:compileDebugKotlin  --no-daemon --stacktrace --info 2>&1 | tee build_logs/02_compile_kotlin.log
+          ./gradlew assembleDebug            --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
 
-      - name: Upload APK
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: ignore
 
-      - name: Upload build reports
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: z9turbo-reports
-          path: |
-            **/build/reports/**
-            **/build/outputs/logs/**
-            **/build/outputs/mapping/**
-          if-no-files-found: ignore
+          name: z9turbo-logs
+          path: build_logs/*.log
+          if-no-files-found: warn
