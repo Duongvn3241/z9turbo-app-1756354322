@@ -3,6 +3,7 @@ on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,11 +13,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Build Debug APK (verbose + managed SDK)
-        env:
-          ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
+
+      - name: Ensure Gradle Wrapper 8.7
         run: |
-          set -e
           chmod +x ./gradlew || true
           if [ ! -f "./gradlew" ]; then
             curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o g.zip
@@ -24,23 +23,33 @@ jobs:
             ~/g/gradle-8.7/bin/gradle wrapper --gradle-version 8.7
             chmod +x ./gradlew
           fi
-          echo "=== Versions ==="
-          java -version || true
-          ./gradlew --version || true
+          ./gradlew --version
+
+      - name: Build Debug APK (verbose + managed SDK)
+        env:
+          ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
+        run: |
+          set -e
           echo "=== Clean ==="
           ./gradlew clean --no-daemon --stacktrace --info
-          echo "=== Compile Kotlin debug ==="
+          echo "=== Dependencies (debug) ==="
+          ./gradlew :app:dependencies --configuration debugCompileClasspath --no-daemon --stacktrace --info
+          echo "=== Compile Kotlin (debug) ==="
           ./gradlew :app:compileDebugKotlin --no-daemon --stacktrace --info
           echo "=== Assemble Debug APK ==="
           ./gradlew assembleDebug --no-daemon --stacktrace --info
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload APK
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload build reports
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: z9turbo-reports
           path: |
