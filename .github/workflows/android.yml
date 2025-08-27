@@ -12,10 +12,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Build Debug APK (managed SDK)
+      - name: Build Debug APK (verbose + managed SDK)
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
         run: |
+          set -e
           chmod +x ./gradlew || true
           if [ ! -f "./gradlew" ]; then
             curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o g.zip
@@ -23,9 +24,27 @@ jobs:
             ~/g/gradle-8.7/bin/gradle wrapper --gradle-version 8.7
             chmod +x ./gradlew
           fi
-          ./gradlew --no-daemon clean assembleDebug --stacktrace --info
+          echo "=== Versions ==="
+          java -version || true
+          ./gradlew --version || true
+          echo "=== Clean ==="
+          ./gradlew clean --no-daemon --stacktrace --info
+          echo "=== Compile Kotlin debug ==="
+          ./gradlew :app:compileDebugKotlin --no-daemon --stacktrace --info
+          echo "=== Assemble Debug APK ==="
+          ./gradlew assembleDebug --no-daemon --stacktrace --info
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: z9turbo-apk
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: z9turbo-reports
+          path: |
+            **/build/reports/**
+            **/build/outputs/logs/**
+            **/build/outputs/mapping/**
+          if-no-files-found: ignore
