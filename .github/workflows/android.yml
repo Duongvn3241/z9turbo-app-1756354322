@@ -12,15 +12,19 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.7
-      - name: Generate Gradle Wrapper (if missing)
-        run: gradle wrapper --gradle-version 8.7
-      - name: Build Debug APK
+      - name: Build Debug APK (managed SDK)
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
-        run: ./gradlew --no-daemon clean assembleDebug
+        run: |
+          chmod +x ./gradlew || true
+          if [ ! -f "./gradlew" ]; then
+            # tạo wrapper 8.7 nếu thiếu
+            curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o g.zip
+            unzip -q g.zip -d ~/g && rm g.zip
+            ~/g/gradle-8.7/bin/gradle wrapper --gradle-version 8.7
+            chmod +x ./gradlew
+          fi
+          ./gradlew --no-daemon clean assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
