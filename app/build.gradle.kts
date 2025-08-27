@@ -2,9 +2,18 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.20"
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
 }
 
 android {
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
     namespace = "com.z9turbo"
     compileSdk = 34
 
