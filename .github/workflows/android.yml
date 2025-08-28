@@ -9,10 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Ensure Gradle Wrapper 8.7
         run: |
           chmod +x ./gradlew || true
@@ -23,6 +25,7 @@ jobs:
             chmod +x ./gradlew
           fi
           ./gradlew --version
+
       - name: Build Debug APK (verbose + managed SDK)
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
@@ -32,15 +35,29 @@ jobs:
           ./gradlew clean                   --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
           ./gradlew :app:compileDebugKotlin --no-daemon --stacktrace --info 2>&1 | tee build_logs/02_compile_kotlin.log
           ./gradlew assembleDebug           --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
-      - uses: actions/upload-artifact@v4
+
+      - name: List APKs (post-build)
         if: always()
+        run: |
+          echo "--- Searching for APK files ---"
+          find . -type f -name "*.apk" -print || true
+          echo "--- Done ---"
+
+      - name: Upload APKs (catch-all)
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
+          path: |
+            **/build/outputs/**/*.apk
+            **/outputs/**/*.apk
+            **/*.apk
+          if-no-files-found: warn
+
+      - name: Upload build logs
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: z9turbo-logs
           path: build_logs/*.log
-          if-no-files-found: warn
+          if-no-files-found: ignore
