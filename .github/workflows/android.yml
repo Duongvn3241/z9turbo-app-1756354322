@@ -1,80 +1,54 @@
 name: Android CI
 on:
-  push:
-    branches: [ "main" ]
+  push: { branches: [ "main" ] }
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
+        with: { distribution: temurin, java-version: "17" }
+      - name: Show structure
+        run: |
+          pwd; ls -la
+          echo "---- settings.gradle.kts ----"; sed -n '1,200p' settings.gradle.kts || true
+          echo "---- app/build.gradle.kts ----"; sed -n '1,200p' app/build.gradle.kts || true
       - name: Ensure Gradle Wrapper 8.7
         run: |
           chmod +x ./gradlew || true
-          if [ ! -f "./gradlew" ]; then
-            curl -sL https://services.gradle.org/distributions/gradle-8.7-bin.zip -o g.zip
-            unzip -q g.zip -d ~/g && rm g.zip
-            ~/g/gradle-8.7/bin/gradle wrapper --gradle-version 8.7
-            chmod +x ./gradlew
-          fi
           ./gradlew --version
-
-      - name: Build app (APK + AAB + logs)
-        env:
-          ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
+      - name: Diagnose projects & tasks
+        run: |
+          ./gradlew projects --no-daemon
+          ./gradlew :app:tasks --all --no-daemon
+      - name: Build Debug (assemble)
+        env: { ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true" }
         run: |
           set -e
           mkdir -p build_logs
           ./gradlew :app:clean --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
-          ./gradlew :app:assembleDebug :app:packageDebug :app:bundleDebug --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_build.log
-
-      - name: List outputs (for debugging)
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
+      - name: List outputs
         if: always()
         run: |
-          echo "---- app/build/outputs tree ----"
-          if [ -d app/build/outputs ]; then
-            find app/build/outputs -maxdepth 6 -type f -print
-          else
-            echo "app/build/outputs does not exist"
-          fi
-          echo "--------------------------------"
-
+          echo "---- app/build/outputs ----"
+          if [ -d app/build/outputs ]; then find app/build/outputs -maxdepth 6 -type f -print; else echo "app/build/outputs does not exist"; fi
       - name: Upload APKs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
-          path: |
-            app/build/outputs/**/*.apk
-            **/build/outputs/**/*.apk
+          path: app/build/outputs/**/*.apk
           if-no-files-found: warn
-
-      - name: Upload AABs
+      - name: Upload whole app/build (zip)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: z9turbo-aab
-          path: |
-            app/build/outputs/**/*.aab
-            **/build/outputs/**/*.aab
-          if-no-files-found: warn
-
-      - name: Upload raw outputs (zip whole outputs dir)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: z9turbo-build-outputs
-          path: app/build/outputs/**
+          name: z9turbo-app-build-dir
+          path: app/build/**
           if-no-files-found: ignore
-
-      - name: Upload build logs
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:

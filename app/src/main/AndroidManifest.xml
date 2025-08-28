@@ -1,13 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.z9turbo">
-  <application
-    android:label="Z9Turbo"
-    android:icon="@mipmap/ic_launcher"
-    android:roundIcon="@mipmap/ic_launcher_round"
-    android:allowBackup="true"
-    android:supportsRtl="true">
-    <activity
-      android:name=".MainActivity"
-      android:exported="true">
+  <application android:label="Z9Turbo" android:allowBackup="true" android:supportsRtl="true">
+    <activity android:name=".MainActivity" android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
