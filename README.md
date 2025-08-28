@@ -38,3 +38,4 @@ A lightweight, privacy-friendly booster that helps you quickly close resource-hu
 ---
 
 MIT License © 202522520
+930
