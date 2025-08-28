@@ -32,9 +32,8 @@ jobs:
         run: |
           set -e
           mkdir -p build_logs
-          ./gradlew clean                   --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
-          ./gradlew :app:compileDebugKotlin --no-daemon --stacktrace --info 2>&1 | tee build_logs/02_compile_kotlin.log
-          ./gradlew assembleDebug           --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
+          ./gradlew clean --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
 
       - name: List APKs (post-build)
         if: always()
@@ -43,14 +42,14 @@ jobs:
           find . -type f -name "*.apk" -print || true
           echo "--- Done ---"
 
-      - name: Upload APKs (catch-all)
+      - name: Upload APKs (newline-delimited patterns)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: z9turbo-apk
           path: |
+            app/build/outputs/**/*.apk
             **/build/outputs/**/*.apk
-            **/outputs/**/*.apk
             **/*.apk
           if-no-files-found: warn
 
