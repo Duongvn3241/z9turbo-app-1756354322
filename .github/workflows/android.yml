@@ -13,7 +13,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Ensure Gradle Wrapper 8.7
         run: |
           chmod +x ./gradlew || true
@@ -24,27 +23,12 @@ jobs:
             chmod +x ./gradlew
           fi
           ./gradlew --version
-
-      - name: Build Debug APK (tee logs)
+      - name: Build Debug APK
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
-        run: |
-          set -e
-          mkdir -p build_logs
-          ./gradlew clean                    --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
-          ./gradlew :app:compileDebugKotlin  --no-daemon --stacktrace --info 2>&1 | tee build_logs/02_compile_kotlin.log
-          ./gradlew assembleDebug            --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
-
+        run: ./gradlew assembleDebug --no-daemon --stacktrace --info
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: z9turbo-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: z9turbo-logs
-          path: build_logs/*.log
-          if-no-files-found: warn
