@@ -26,23 +26,27 @@ jobs:
           fi
           ./gradlew --version
 
-      - name: Build Debug APK (verbose + managed SDK)
+      - name: Build app (APK + AAB + logs)
         env:
           ORG_GRADLE_PROJECT_android.experimental.enableSdkDownload: "true"
         run: |
           set -e
           mkdir -p build_logs
-          ./gradlew clean --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_assemble.log
+          ./gradlew :app:clean --no-daemon --stacktrace --info 2>&1 | tee build_logs/01_clean.log
+          ./gradlew :app:assembleDebug :app:packageDebug :app:bundleDebug --no-daemon --stacktrace --info 2>&1 | tee build_logs/03_build.log
 
-      - name: List APKs (post-build)
+      - name: List outputs (for debugging)
         if: always()
         run: |
-          echo "--- Searching for APK files ---"
-          find . -type f -name "*.apk" -print || true
-          echo "--- Done ---"
+          echo "---- app/build/outputs tree ----"
+          if [ -d app/build/outputs ]; then
+            find app/build/outputs -maxdepth 6 -type f -print
+          else
+            echo "app/build/outputs does not exist"
+          fi
+          echo "--------------------------------"
 
-      - name: Upload APKs (newline-delimited patterns)
+      - name: Upload APKs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -50,8 +54,25 @@ jobs:
           path: |
             app/build/outputs/**/*.apk
             **/build/outputs/**/*.apk
-            **/*.apk
           if-no-files-found: warn
+
+      - name: Upload AABs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: z9turbo-aab
+          path: |
+            app/build/outputs/**/*.aab
+            **/build/outputs/**/*.aab
+          if-no-files-found: warn
+
+      - name: Upload raw outputs (zip whole outputs dir)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: z9turbo-build-outputs
+          path: app/build/outputs/**
+          if-no-files-found: ignore
 
       - name: Upload build logs
         if: always()
